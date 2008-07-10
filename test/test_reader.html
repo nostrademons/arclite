@@ -1,0 +1,138 @@
+<script type = "text/javascript" src = "jsunit/app/jsUnitCore.js"></script>
+<script type = "text/javascript" src = "../utils.js"></script>
+<script type = "text/javascript" src = "../buffer.js"></script>
+<script type = "text/javascript" src = "../types.js"></script>
+<script type = "text/javascript" src = "../reader.js"></script>
+<script type = "text/javascript">
+
+function read_eq(expected, expr) {
+    var result = Read(expr);
+    if(result.__teq('cons') || result.__teq('table') 
+            || result.__teq('fn') || result.__teq('mac')) {
+        result = result.__print();
+    }
+    assertEquals(expected, result.__to_js());
+};
+
+function test_is_delim() {
+    assertTrue('space', Read.test.is_delim(' '));
+    assertTrue('parent', Read.test.is_delim('('));
+    assertTrue('eof', Read.test.is_delim(false));
+};
+function test_manual_read_token() {
+    var buffer = Buffer('foo bar');
+    assertEquals('foo', Read.test.read_token(buffer));
+    assertEquals('bar', buffer.read_until(Read.test.is_delim));
+    assertEquals('', buffer.read_until(Read.test.is_not_whitespace));
+};
+
+function test_read_token() {
+    assertEquals('foo', Read.test.read_token(Buffer('foo')));
+};
+function test_read_token_trailing_whitespace() {
+    assertEquals('foo', Read.test.read_token(Buffer('foo  \n')));
+};
+
+function test_int() { read_eq(22, '22'); };
+function test_int_negative() { read_eq(-5, '-5'); };
+
+function test_float() { read_eq(7.5, '7.5'); };
+function test_float_trailing_zero() { read_eq(7.5, '7.50'); };
+function test_float_less_than_one() { read_eq(0.5, '0.5'); };
+
+function test_char_newline() { read_eq('\n', '#\\newline'); };
+function test_char_space() { read_eq(' ', '#\\space'); };
+function test_char_tab() { read_eq('\t', '#\\tab'); };
+function test_char_x() { read_eq('x', '#\\x'); };
+function test_char_unicode() { read_eq('\u18a3', '#\\x18a3'); };
+
+test_char_newline();
+test_char_unicode();
+
+function test_string() { assertEquals('foo', Read(Buffer('"foo"')).__to_js()); };
+function test_string_with_spaces() { 
+    read_eq('a string with a space', '"a string with a space"');
+};
+function test_string_with_quotes() {
+    read_eq("single 'quotes'", '"single \'quotes\'"');
+};
+function test_string_escaped_quote() {
+    read_eq('escaped " embedded', '"escaped \\" embedded"');
+};
+function test_string_newline() {
+    read_eq('newline\n', '"newline\\n"');
+};
+
+function test_sym() { 
+    read_eq('foo', 'foo'); 
+    assertEquals('foo', 'sym', Read('foo').__type().__to_js());
+};
+function test_sym_dash() {
+    read_eq('foo-bar', 'foo-bar'); 
+};
+function test_sym_star() {
+    read_eq('a-global*', 'a-global*'); 
+    assertEquals('a-global*', 'sym', Read('a-global*').__type().__to_js());
+};
+function test_sym_underscore() {
+    read_eq('with_underscores', 'with_underscores');
+    assertEquals('with_underscores', 'sym', Read('with_underscores').__type().__to_js());
+};
+function test_sym_special_chars() {
+    read_eq('sym->string', 'sym->string');
+    assertEquals('sym->string', 'sym', Read('sym->string').__type().__to_js());
+    read_eq('++', '++');
+    assertEquals('++', 'sym', Read('++').__type().__to_js());
+    read_eq('/=', '/=');
+    assertEquals('/=', 'sym', Read('/=').__type().__to_js());
+};
+function test_sym_dots() {
+    read_eq('foo.bar', 'foo.bar');
+    assertEquals('foo-bar', 'sym', Read('foo-bar').__type().__to_js());
+};
+function test_sym_numbers() {
+    read_eq('1foo', '1foo');
+    read_eq('foo-1', 'foo-1');
+};
+
+
+function test_list() {
+    assertEquals('baz', Read('(foo bar baz)').__index(2)._car.__to_js());
+};
+function test_single_list() {
+    assertEquals('foo', Read('(foo)')._car.__to_js());
+};
+function test_nested_list() {
+    var list = Read('(foo (nested list) bar)');
+    assertEquals('list', list.__index(1)._car._cdr._car.__to_js());
+    assertEquals('bar', list.__index(2)._car.__to_js());
+};
+function test_dotted_list() {
+    var list = Read('(foo . bar)');
+    assertFalse(list._cdr.__type().__eq('cons'));
+    assertEquals('bar', list._cdr.__to_js());
+};
+
+function test_quote() {
+    var list = Read("'foo");
+    assertTrue(list.__teq('cons'));
+    assertEquals('quote', list._car.__to_js());
+    assertEquals('foo', list._cdr._car.__to_js());
+};
+
+function test_brackets() {
+    assertEquals('(fn (_) (body (+ 2 _)))', Read('[body (+ 2 _)]').__print().__to_js());
+    assertEquals('((fn (_) (+ 2 _)) 3)', Read('([+ 2 _] 3)').__print().__to_js());
+};
+
+function test_quasiquote() {
+    read_eq('(quasiquote (foo))', '`(foo)');
+    read_eq('(quasiquote (foo (unquote bar)))', '`(foo ,bar)');
+    read_eq('(quasiquote (foo (unquote-splicing (bar baz))))', '`(foo ,@(bar baz))');
+    read_eq('(quasiquote (set (unquote foo) (unquote (* 6 7)) ' +
+                 '(nested (call (unquote-splicing foo)))))',
+                 '`(set ,foo  ,(* 6 7) (nested (call ,@foo)))');
+    read_eq('(quasiquote ((fn nil (unquote-splicing args))))', "`((fn () ,@args))");
+};
+
+</script>

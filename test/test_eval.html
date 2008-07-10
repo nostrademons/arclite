@@ -1,0 +1,122 @@
+<script type = "text/javascript" src = "jsunit/app/jsUnitCore.js"></script>
+<script type = "text/javascript" src = "../utils.js"></script>
+<script type = "text/javascript" src = "../buffer.js"></script>
+<script type = "text/javascript" src = "../types.js"></script>
+<script type = "text/javascript" src = "../primitives.js"></script>
+<script type = "text/javascript" src = "../reader.js"></script>
+<script type = "text/javascript" src = "../eval.js"></script>
+<script type = "text/javascript">
+
+function sym_list() {
+    return Types.list(Utils.map(arguments, Types.sym));
+};
+
+function int_list() {
+    return Types.list(Utils.map(arguments, Types.int_));
+};
+
+function str_list() {
+    return Types.list(Utils.map(arguments, Types.str));
+};
+
+function eval_eq(expected, expr) {
+    var result = Eval.eval_line(expr);
+    if(result.__teq('cons') || result.__teq('table') 
+            || result.__teq('fn') || result.__teq('mac')) {
+        result = result.__print();
+    }
+    assertEquals(expected, result.__to_js());
+};
+
+function test_literal_int() { eval_eq(3, '3'); };
+function test_literal_string() {
+    eval_eq('test', '"test"');
+    eval_eq('foo\nbar', '"foo\\nbar"');
+};
+function test_literal_float() { eval_eq(4.5, '4.5'); };
+function test_literal_char() { eval_eq('c', '#\\c'); };
+function test_literal_true() { eval_eq(true, 't'); };
+function test_literal_false() { eval_eq(false, 'nil'); };
+
+function test_quote() { eval_eq('foo', "'foo"); };
+function test_quote_list() { eval_eq('(foo bar baz)', '(quote (foo bar baz))'); };
+
+function test_primitive_call() {
+    eval_eq(36, '(*  3 2 6)');
+    eval_eq(4, '(sqrt 16)');
+};
+function test_primitive_nested() {
+    eval_eq(2, '(+ (- 3 2) 1)');
+    eval_eq(32, '(+ (* 5 6) 2)');
+    eval_eq('40', "(coerce (* (+ 6 2) 5) 'string)");
+};
+
+function test_if() {
+    eval_eq(5, "(if (> 3 2) 5 'foo)");
+    eval_eq('foo', "(if (< 3 2) 5 'foo)");
+};
+
+function test_if_nested() {
+    eval_eq('yes', '(if (< 3 2) \'nope (> "foo" "bar") "yes" "no")');
+    eval_eq('nope', '(if (> 3 2) \'nope (> "foo" "bar") "yes" "no")');
+};
+
+function test_set() {
+    eval_eq('my-value', '(set foo "my-value")');
+    eval_eq('my-value', 'foo');
+};
+
+function test_set_lexical() {
+    eval_eq('bar', '((fn (s2) (set s2 "bar") s2) "foo")');
+};
+
+function test_set_multiple() {
+    eval_eq('value2', '(set foo (* 6 7) bar (+ "value" 2))');
+    eval_eq(42, 'foo');
+    eval_eq('value2', 'bar');
+};
+
+function test_quasiquote() {
+    eval_eq('(datum 3)', "(set foo '(datum 3))");
+    eval_eq('(set (datum 3) 42 (nested (call datum 3)))',
+            '`(set ,foo  ,(* 6 7) (nested (call ,@foo)))');
+    eval_eq('((fn nil datum 3))', '`((fn () ,@foo))');
+};
+
+function test_fn_immediate() {
+    eval_eq(5, '([+ 2 _] 3)');
+};
+
+function test_fn_no_args() {
+    eval_eq(3, '((fn () 3))');
+};
+
+function test_fn_varargs() {
+    eval_eq('(foo bar)', "((fn args args) 'foo 'bar)");
+};
+
+function test_closure() {
+    eval_eq('#procedure: (incr)', "(set times (fn (incr) [* incr _]))");
+    eval_eq('#procedure: (_)', '(set double (times 2))');
+    eval_eq('#procedure: (_)', '(set triple (times 3))');
+    eval_eq(10, '(double 5)');
+    eval_eq(14, '(double 7)');
+    eval_eq(21, '(triple 7)');
+};
+
+function test_macro() {
+    eval_eq('(tagged mac #procedure: (var))', '(set varset (annotate \'mac ' +
+                    '(fn (var) `[set ,(+ "var-" (coerce var \'string)) _])))');
+    eval_eq(42, '((varset 1) 42)');
+    eval_eq(16, '((varset 2) 16)');
+    eval_eq(44, '(+ var-1 2)');
+    eval_eq(12, '(- var-2 4)');
+};
+
+function test_eval_multiple() {
+    assertEquals('42', Eval.eval_text('(set foo 6)   \n(* foo 7) ').__print().__to_js());
+};
+
+test_set_lexical();
+
+</script>

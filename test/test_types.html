@@ -1,0 +1,65 @@
+<script type = "text/javascript" src = "jsunit/app/jsUnitCore.js"></script>
+<script type = "text/javascript" src = "../utils.js"></script>
+<script type = "text/javascript" src = "../buffer.js"></script>
+<script type = "text/javascript" src = "../types.js"></script>
+<script type = "text/javascript">
+
+function test_sym() {
+    var sym = Types.sym('foobar');
+    assertEquals('foobar', sym.__to_js());
+    assertEquals('bar', sym.substring(3));
+    assertEquals('sym', sym.__type().__to_js());
+};
+
+function test_bool() {
+    assertEquals(true, Types.T.__to_js());
+    assertEquals('t', Types.T.__print().__to_js());
+    assertEquals(false, Types.NIL.__to_js());
+    assertEquals('nil', Types.NIL.__print().__to_js());
+};
+
+function test_str() {
+    var str = Types.str('foobar');
+    assertEquals('foobar', str.__to_js());
+    assertEquals('bar', str.substring(3));
+    assertEquals('string', str.__type().__to_js());
+    assertEquals('b', str.__call([3]).__to_js());
+    assertEquals('foocar', str.__set(3, Types.chr('c')).__to_js());
+};
+
+function test_int() {
+    var num = Types.int_(42);
+    assertEquals(42, num.__to_js());
+    assertEquals(44, num + 2);
+    assertEquals(21, num / 2);
+    assertEquals('int', num.__type().__to_js());
+    assertUndefined((num + 2).__type);
+    assertTrue('eq', num.__eq(42));
+    assertTrue('add type', Types.int_(num + 2).__type().__eq('int'));
+};
+
+function test_float() {
+    var num = Types.num(3.5);
+    assertEquals('num', num.__type().__to_js());
+};
+
+function test_list() {
+    var list = Types.list([Types.sym('foo'), Types.sym('bar'), Types.sym('baz')]);
+    assertEquals('foo', list._car.__to_js());
+    assertEquals('baz', list.__index(2)._car.__to_js());
+    assertEquals(Types.NIL, list.__index(2)._cdr);
+    assertEquals('cons', list.__type().__to_js());
+    assertEquals('bar', list.__call([1]).__to_js());
+    assertEquals('(foo bar baz)', list.__print().__to_js());
+
+    list.__set([1], Types.sym('new'));
+    assertEquals('new', list.__index(1)._car.__to_js());
+};
+
+function test_improper_list() {
+    var list = Types.list([Types.sym('foo'), Types.sym('bar')], true);
+    assertEquals('foo', list._car.__to_js());
+    assertEquals('bar', list._cdr.__to_js());
+};
+
+</script>

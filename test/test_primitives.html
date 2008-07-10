@@ -1,0 +1,114 @@
+<script type = "text/javascript" src = "jsunit/app/jsUnitCore.js"></script>
+<script type = "text/javascript" src = "../utils.js"></script>
+<script type = "text/javascript" src = "../buffer.js"></script>
+<script type = "text/javascript" src = "../types.js"></script>
+<script type = "text/javascript" src = "../primitives.js"></script>
+<script type = "text/javascript">
+
+function sym_list() {
+    return Types.list(Utils.map(arguments, Types.sym));
+};
+
+function int_list() {
+    return Types.list(Utils.map(arguments, Types.int_));
+};
+
+function str_list() {
+    return Types.list(Utils.map(arguments, Types.str));
+};
+
+function test_car() {
+    assertEquals('foo', Primitives.car(sym_list('foo', 'bar')).__to_js());
+};
+
+function test_cdr() {
+    assertEquals('(bar)', Primitives.cdr(sym_list('foo', 'bar')).__print().__to_js());
+    assertEquals(Types.NIL, Primitives.cdr(sym_list('foo')));
+};
+
+function test_scar() {
+    var list = sym_list('foo', 'bar');
+    assertEquals('baz', Primitives.scar(list, Types.sym('baz')).__to_js());
+    assertEquals('baz', Primitives.car(list).__to_js());
+};
+
+function test_scdr() {
+    var list = sym_list('foo');
+    assertEquals('bar', Primitives.car(Primitives.scdr(list, sym_list('bar'))).__to_js());
+    assertEquals('foo,bar', list.__to_list().join(','));
+
+    assertEquals(Types.NIL, Primitives.scdr(list, Types.NIL));
+    assertEquals('(foo)', list.__print().__to_js());
+};
+
+function test_newstring() {
+    assertEquals('fffff', Primitives.newstring(Types.int_(5), Types.chr('f')).__to_js());
+    assertEquals('\0', Primitives.newstring(Types.int_(1)).__to_js());
+};
+
+function test_add_ints() {
+    assertEquals(5, Primitives['+'].apply(null, Utils.map([2, 3], Types.int_)).__to_js());
+    assertEquals(16, Primitives['+'].apply(null, Utils.map([2, 5, 3, 6], Types.int_)).__to_js());
+};
+
+function test_add_strings() {
+    assertEquals('foobar', Primitives['+'](Types.str('foo'), Types.str('bar')).__to_js());
+    assertEquals('century21', Primitives['+'](Types.str('century'), Types.int_(21)).__to_js());
+    assertEquals('hot4u', Primitives['+'](Types.str('hot'), Types.int_(4), Types.chr('u')).__to_js());
+};
+
+function test_add_lists() {
+    assertEquals('(foo bar baz quux)', Primitives['+'](sym_list('foo', 'bar'),
+                        sym_list('baz', 'quux')).__print().__to_js());
+};
+
+function test_subtract() {
+    assertEquals(2, Primitives['-'].apply(null, Utils.map([11, 5, 3, 1], Types.int_)).__to_js());
+};
+
+function test_length() {
+    assertEquals(6, Primitives.len(Types.str('foobar')).__to_js());
+    assertEquals(3, Primitives.len(Types.list(['foo', 'bar', 'baz'])).__to_js());
+    // Separate hashtable checks...
+};
+
+function test_greater_num() {
+    assertTrue('2-arg', Primitives['>'](Types.int_(4), Types.int_(2)).__to_js());
+    assertTrue('many-arg', Primitives['>'].apply(null, Utils.map([11, 5, 3, 1], Types.int_)).__to_js());
+    assertFalse(Primitives['>'].apply(null, Utils.map([4, 11, 3, 1], Types.int_)).__to_js());
+};
+
+function test_greater_str() {
+    assertTrue('2-arg', Primitives['>'](Types.str('foo'), Types.str('bar')).__to_js());
+    assertTrue('many-arg', Primitives['>'].apply(null, 
+                Utils.map(['foo', 'baz', 'bar'], Types.str)).__to_js());
+    assertFalse(Primitives['>'].apply(null, 
+                Utils.map(['foo', 'bar', 'baz'], Types.str)).__to_js());
+};
+
+function test_greater_sym() {
+    assertTrue('2-arg', Primitives['>'](Types.sym('foo'), Types.sym('bar')).__to_js());
+    assertTrue('many-arg', Primitives['>'].apply(null, 
+                Utils.map(['foo', 'baz', 'bar'], Types.sym)).__to_js());
+    assertFalse(Primitives['>'].apply(null, 
+                Utils.map(['foo', 'bar', 'baz'], Types.sym)).__to_js());
+};
+
+function test_is() {
+    assertTrue('symbols', Primitives.is(Types.sym('foo'), Types.sym('foo')).__to_js());
+    assertFalse('symbols', Primitives.is(Types.sym('foo'), Types.sym('bar')).__to_js());
+    assertFalse('mixed', Primitives.is(Types.sym('foo'), Types.str('foo')).__to_js());
+    assertTrue('nums', Primitives.is.apply(null, Utils.map([3, 3, 3, 3], Types.int_)).__to_js());
+    assertFalse('nums', Primitives.is.apply(null, Utils.map([3, 3, 4], Types.int_)).__to_js());
+    assertFalse('strings', Primitives.is(Types.str('foo'), Types.str('bar')).__to_js());
+};
+
+function test_annotate() {
+    var tagged = Primitives.annotate(Types.sym('mac'), sym_list('foo', 'bar', 'baz'));
+    assertEquals('mac', tagged.__type().__to_js());
+    assertEquals('bar', tagged.__call([Types.int_(1)]).__to_js());
+    assertEquals('new', tagged.__set(Types.int_(1), Types.sym('new')).__to_js());
+    assertEquals('new', tagged.__call([Types.int_(1)]).__to_js());
+};
+
+</script>

@@ -1,0 +1,48 @@
+<script type = "text/javascript" src = "jsunit/app/jsUnitCore.js"></script>
+<script type = "text/javascript" src = "../buffer.js"></script>
+<script type = "text/javascript">
+function test_read() {
+    var buffer = new Buffer('test');
+    assertEquals('t', buffer.read());
+    assertEquals('e', buffer.read());
+    buffer.read();
+    buffer.read();
+    assertFalse(buffer.read());
+};
+
+function test_peek() {
+    var buffer = new Buffer('lookahead');
+    assertEquals('l', buffer.peek());
+    assertEquals('l', buffer.read());
+};
+
+function test_get() {
+    var buffer = new Buffer('RANDOM');
+    assertEquals('D', buffer.get(3));
+    assertEquals('R', buffer.read());
+};
+
+function is_space(c) {
+    return c == ' ';
+};
+
+function is_eof(c) {
+    return c === false;
+};
+
+function test_read_until() {
+    var buffer = new Buffer('foo bar baz');
+    assertEquals('foo', buffer.read_until(is_space));
+};
+
+function test_read_until_eof() {
+    var buffer = new Buffer('foo bar baz');
+    assertEquals('foo bar baz', buffer.read_until(is_eof));
+};
+
+function test_repeated_read_until() {
+    var buffer = new Buffer('foo');
+    assertEquals('foo', buffer.read_until(is_eof));
+    assertEquals('', buffer.read_until(is_eof));
+};
+</script>

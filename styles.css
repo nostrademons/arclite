@@ -1,0 +1,95 @@
+h1 {
+    text-align: center;
+}
+
+#inputLine, #outputWrap, #labelLine, #blockInput {
+    display: block;
+    margin: 0 auto;
+    width: 60%;
+}
+
+#page {
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+    border: 1px solid black;
+}
+
+p, ol, ul {
+    font-family: Helvetica, Arial, sans-serif;
+    margin-left: auto;
+    margin-right: auto;
+    width: 90%;
+}
+
+#inputLine {
+    margin-bottom: 10px;
+}
+
+#input {
+    width: 80%;
+}
+
+#eval {
+    width: 15%;
+}
+
+#labelLine label {
+    float: left;
+    width: 50%;
+    text-align: left;
+}
+
+#labelLine a {
+    width: 50%;
+    float: left;
+    text-align: right;
+}
+
+#blockInput {
+    clear: both;
+}
+
+#blockInput textarea {
+    display: block;
+    height: 300px;
+    width: 100%;
+}
+
+#blockInput button {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#outputWrap {
+    clear: both;
+    border: 1px solid black;
+    width: 60%;
+    height: 80px;
+    padding: 0;
+}
+
+#output {
+    overflow-y: auto;
+    width: 99.5%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.inputText, .outputText, .errorText {
+    width: 100%;
+}
+
+.inputText {
+    color: black;
+}
+
+.outputText {
+    color: green;
+}
+
+.errorText {
+    color: red;
+}

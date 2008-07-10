@@ -1,0 +1,3 @@
+This is a JavaScript port of Paul Graham's Arc programming language.  It is nearly-fully-conforming, in the sense of being able to run arc.arc: it lacks continuations and some of the I/O primitives, which is why there's a special arclite.arc with the broken forms stripped out.  Firefox (and other browsers which support __proto__) only; does not work in IE.
+
+The source code is written as a series of modules; build.sh takes care of concatenating them together to a single arclite.js file.  The index.html file provides a host for this file, letting you evaluate arc forms in your browser.  There are also JSUnit tests in /test.
